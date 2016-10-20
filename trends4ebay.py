@@ -1,7 +1,7 @@
 # @Author: Gao Bo
 # @Date:   2016-10-11T20:27:15-04:00
 # @Last modified by:   Gao Bo
-# @Last modified time: 2016-10-18T15:54:25-04:00
+# @Last modified time: 2016-10-20T19:30:29-04:00
 
 
 
@@ -81,7 +81,7 @@ def parseItemList(itemDictList):
             tItem = {}
             if not (hasattr(item, 'viewItemURL') and hasattr(item, 'galleryURL') and hasattr(item, 'title') and hasattr(item, 'itemId') and hasattr(item, 'sellingStatus')): continue
             tItem["viewItemURL"] = item.viewItemURL
-            tItem["galleryURL"] = item.galleryURL
+            tItem["galleryURL"] = "http://i.ebayimg.com/images/i/%s-0-1/s-l1000.jpg" % (item.itemId)
             tItem["title"] = item.title
             tItem["itemId"] = item.itemId
             tItem["currentPrice"] = item.sellingStatus.currentPrice.value
@@ -126,6 +126,7 @@ if __name__ == "__main__":
 
         # parse the searches into keywords
         keywordsList = parseHottrends(hottrendsdetail)
+        # keywordsList = ["Logan"]
         print("Keywords List")
         print(keywordsList)
 
