@@ -1,7 +1,7 @@
 # @Author: Gao Bo
 # @Date:   2016-10-11T20:27:15-04:00
 # @Last modified by:   Gao Bo
-# @Last modified time: 2016-10-20T19:30:29-04:00
+# @Last modified time: 2016-10-21T16:16:28-04:00
 
 
 
@@ -18,6 +18,8 @@ from ebaysdk.finding import Connection
 from pytrends.request import *
 import xmltodict
 
+datafolder = '../trendsData/'
+
 
 def parseHottrends(trends):
     trendsList = trends["rss"]["channel"]["item"]
@@ -25,7 +27,7 @@ def parseHottrends(trends):
     # tLen = len(trendsList)
     assert len(trendsList) == 20
     for tItem in trendsList:
-        keywordsList.append(tItem["title"])
+        keywordsList.append(tItem["title"].lower())
     return keywordsList
 
 
@@ -62,6 +64,10 @@ def getItemList(ebayAPI, keywordsList, maxN):
 
     return itemDictList
 
+# filtering function
+def validItem(item):
+    return (item.topRatedListing.lower() == 'true')
+
 
 def parseItemList(itemDictList):
     '''
@@ -79,20 +85,39 @@ def parseItemList(itemDictList):
         shortItemDict[keyword] = []
         for item in itemDictList[keyword]:
             tItem = {}
-            if not (hasattr(item, 'viewItemURL') and hasattr(item, 'galleryURL') and hasattr(item, 'title') and hasattr(item, 'itemId') and hasattr(item, 'sellingStatus')): continue
+            if not (hasattr(item, 'viewItemURL') and hasattr(item, 'galleryURL') and hasattr(item, 'title') and hasattr(item, 'itemId') and hasattr(item, 'sellingStatus') and hasattr(item, 'topRatedListing')): continue
+            if not validItem(item): continue
             tItem["viewItemURL"] = item.viewItemURL
             tItem["galleryURL"] = "http://i.ebayimg.com/images/i/%s-0-1/s-l1000.jpg" % (item.itemId)
             tItem["title"] = item.title
             tItem["itemId"] = item.itemId
             tItem["currentPrice"] = item.sellingStatus.currentPrice.value
+            tItem["topRatedListing"] = item.topRatedListing
             shortItemDict[keyword].append(tItem)
 
     return shortItemDict
 
 
 def save_obj(obj, name):
-    with codecs.open('trendsData/'+ name + '.pkl', 'wb') as f:
+    with codecs.open(datafolder + name + '.pkl', 'wb') as f:
         pickle.dump(obj, f)
+
+
+def load_obj(name):
+    with open(datafolder + name + '.pkl', 'rb') as f:
+        return pickle.load(f)
+
+def load_settings(name):
+    settingDict = {}
+    with open(datafolder + name, 'r') as f:
+        key = f.readline()
+        settingDict[key.strip()] = f.readline().lower().strip().split(',')
+        key = f.readline()
+        settingDict[key.strip()] = f.readline().lower().strip().split(',')
+    assert("blacklist" in settingDict)
+    assert("whitelist" in settingDict)
+    return settingDict
+
 
 def dumpHuman(itemDictList):
     # dump the result
@@ -104,10 +129,17 @@ def dumpHuman(itemDictList):
         outfile.write('\n\n')
     outfile.close()
 
+def SEO(settingDict, keywordsList):
+    nkeywordsList = settingDict['whitelist']
+    for keyword in keywordsList:
+        notInBlacklist = True
+        for blackword in settingDict['blacklist']:
+            if blackword in keyword:
+                notInBlacklist = False
+                break
+        if (notInBlacklist): nkeywordsList.append(keyword)
 
-def load_obj(name):
-    with open('trendsData/' + name + '.pkl', 'rb') as f:
-        return pickle.load(f)
+    return nkeywordsList[0: min(20, len(nkeywordsList))]
 
 
 if __name__ == "__main__":
@@ -126,7 +158,15 @@ if __name__ == "__main__":
 
         # parse the searches into keywords
         keywordsList = parseHottrends(hottrendsdetail)
-        # keywordsList = ["Logan"]
+        print("Keywords List")
+        print(keywordsList)
+
+        # get settings
+        settingDict = load_settings("adminsettings")
+        print("Settings")
+        print(settingDict)
+
+        keywordsList = SEO(settingDict, keywordsList)
         print("Keywords List")
         print(keywordsList)
 
