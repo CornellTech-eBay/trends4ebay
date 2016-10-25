@@ -1,7 +1,7 @@
 # @Author: Gao Bo
 # @Date:   2016-10-11T20:27:15-04:00
 # @Last modified by:   Gao Bo
-# @Last modified time: 2016-10-21T16:16:28-04:00
+# @Last modified time: 2016-10-21T22:22:53-04:00
 
 
 
@@ -111,9 +111,13 @@ def load_settings(name):
     settingDict = {}
     with open(datafolder + name, 'r') as f:
         key = f.readline()
-        settingDict[key.strip()] = f.readline().lower().strip().split(',')
+        content = f.readline()
+        if content: settingDict[key.strip()] = content.lower().strip().split(',')
+        else: settingDict[key.strip()] = []
         key = f.readline()
-        settingDict[key.strip()] = f.readline().lower().strip().split(',')
+        content = f.readline()
+        if content: settingDict[key.strip()] = content.lower().strip().split(',')
+        else: settingDict[key.strip()] = []
     assert("blacklist" in settingDict)
     assert("whitelist" in settingDict)
     return settingDict
@@ -121,7 +125,7 @@ def load_settings(name):
 
 def dumpHuman(itemDictList):
     # dump the result
-    outfile = codecs.open("itemsOutput.txt", "w", "utf-8")
+    outfile = codecs.open(datafolder + "itemsOutput.txt", "w", "utf-8")
     for keyword in itemDictList['keywordsList']:
         outfile.write(keyword + '\n\n')
         for item in itemDictList[keyword]:
