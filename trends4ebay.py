@@ -1,7 +1,7 @@
 # @Author: Gao Bo
 # @Date:   2016-10-11T20:27:15-04:00
 # @Last modified by:   Gao Bo
-# @Last modified time: 2016-10-21T22:22:53-04:00
+# @Last modified time: 2016-10-29T21:41:40-04:00
 
 
 
@@ -16,6 +16,9 @@ from ebaysdk.exception import ConnectionError
 from ebaysdk.finding import Connection
 
 from pytrends.request import *
+
+from buzzfeedtrends.BFRequest import getBFTrends
+
 import xmltodict
 
 datafolder = '../trendsData/'
@@ -64,6 +67,7 @@ def getItemList(ebayAPI, keywordsList, maxN):
 
     return itemDictList
 
+
 # filtering function
 def validItem(item):
     return (item.topRatedListing.lower() == 'true')
@@ -86,7 +90,7 @@ def parseItemList(itemDictList):
         for item in itemDictList[keyword]:
             tItem = {}
             if not (hasattr(item, 'viewItemURL') and hasattr(item, 'galleryURL') and hasattr(item, 'title') and hasattr(item, 'itemId') and hasattr(item, 'sellingStatus') and hasattr(item, 'topRatedListing')): continue
-            if not validItem(item): continue
+            # if not validItem(item): continue
             tItem["viewItemURL"] = item.viewItemURL
             tItem["galleryURL"] = "http://i.ebayimg.com/images/i/%s-0-1/s-l1000.jpg" % (item.itemId)
             tItem["title"] = item.title
@@ -107,6 +111,7 @@ def load_obj(name):
     with open(datafolder + name + '.pkl', 'rb') as f:
         return pickle.load(f)
 
+
 def load_settings(name):
     settingDict = {}
     with open(datafolder + name, 'r') as f:
@@ -124,7 +129,7 @@ def load_settings(name):
 
 
 def dumpHuman(itemDictList):
-    # dump the result
+    # dump the item list
     outfile = codecs.open(datafolder + "itemsOutput.txt", "w", "utf-8")
     for keyword in itemDictList['keywordsList']:
         outfile.write(keyword + '\n\n')
@@ -132,6 +137,16 @@ def dumpHuman(itemDictList):
             outfile.write(str(item) + '\n\n')
         outfile.write('\n\n')
     outfile.close()
+
+
+def getBFTrendingList(section='trending'):
+    parsedBFTrends = getBFTrends(section)
+    BFTrendsList = []
+    for buzz in parsedBFTrends:
+        BFTrendsList.append(buzz['title'])
+
+    return BFTrendsList
+
 
 def SEO(settingDict, keywordsList):
     nkeywordsList = settingDict['whitelist']
@@ -162,8 +177,17 @@ if __name__ == "__main__":
 
         # parse the searches into keywords
         keywordsList = parseHottrends(hottrendsdetail)
-        print("Keywords List")
+        print("Keywords List:")
         print(keywordsList)
+
+        # get buzzfeed trends
+        BFTrendsList = getBFTrendingList('trending')
+        print("BuzzFeed Stories:")
+        print(BFTrendsList)
+
+        keywordsList = keywordsList[0:10] + BFTrendsList[0:10]
+
+        print(len(keywordsList))
 
         # get settings
         settingDict = load_settings("adminsettings")
@@ -188,7 +212,6 @@ if __name__ == "__main__":
         dumpHuman(itemDictList)
 
         itemDictList = parseItemList(itemDictList)
-
         save_obj(itemDictList, 'parsedData')
 
     else:
