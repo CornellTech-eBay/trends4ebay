@@ -1,0 +1,3 @@
+[submodule "buzzfeedtrends"]
+	path = buzzfeedtrends
+	url = https://github.com/CornellTech-eBay/buzzfeedtrends.git
