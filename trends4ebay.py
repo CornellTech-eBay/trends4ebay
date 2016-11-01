@@ -1,7 +1,7 @@
 # @Author: Gao Bo
 # @Date:   2016-10-11T20:27:15-04:00
 # @Last modified by:   Gao Bo
-# @Last modified time: 2016-10-29T21:41:40-04:00
+# @Last modified time: 2016-11-01T13:06:57-04:00
 
 
 
@@ -209,7 +209,7 @@ if __name__ == "__main__":
         itemDictList = getItemList(ebayAPI, keywordsList, 5)
 
         save_obj(itemDictList, 'rawData')
-        dumpHuman(itemDictList)
+        # dumpHuman(itemDictList)
 
         itemDictList = parseItemList(itemDictList)
         save_obj(itemDictList, 'parsedData')
