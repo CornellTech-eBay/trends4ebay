@@ -1,7 +1,7 @@
 # @Author: Gao Bo
 # @Date:   2016-10-11T20:27:15-04:00
 # @Last modified by:   Gao Bo
-# @Last modified time: 2016-11-09T16:47:17-05:00
+# @Last modified time: 2016-11-09T17:02:17-05:00
 
 
 
@@ -165,7 +165,7 @@ def SEO(settingDict, keywordsList):
 
 if __name__ == "__main__":
 
-    getData = False
+    getData = True
 
     if getData:
 
@@ -186,6 +186,25 @@ if __name__ == "__main__":
         BFTrendsList = getBFTrendingList('trending')
         print("BuzzFeed Stories:")
         print(BFTrendsList)
+
+        # get twitter trends
+        config = {
+        'consumer_key' : 'HsSAsHDYrqs1gkVDVI6djlV88',
+        'consumer_secret' : '323NIf8LGUH3Umm1WXG8mTZ3ti68h8wOM9d5LU8mTC1R84wNoc',
+        'access_key' : '796465615720640512-YXBMkfdYswssF17ln9SsxFFCdxHr69G',
+        'access_secret' : 'Pd2ZUzQER5HLTPorsXISTjUinMSXXqZvOZhsDL3VNq3f5'}
+
+        twitter = Twitter(auth = OAuth(config["access_key"], config["access_secret"], config["consumer_key"], config["consumer_secret"]))
+
+        results = twitter.trends.place(_id = 2459115)
+        # localised trends can be specified by looking up WOE IDs:
+        # http://woeid.rosselliot.co.nz/lookup/
+        # WOEID for NYC is 2459115, for the world is 1, for United States is 23424977
+        print("Twitter NYC Trends:")
+
+        for location in results:
+        	for trend in location["trends"]:
+        		print(trend["name"])
 
         keywordsList = keywordsList[0:10] + BFTrendsList[0:10]
 
@@ -217,20 +236,4 @@ if __name__ == "__main__":
         save_obj(itemDictList, 'parsedData')
 
     else:
-        config = {
-        'consumer_key' : 'HsSAsHDYrqs1gkVDVI6djlV88',
-        'consumer_secret' : '323NIf8LGUH3Umm1WXG8mTZ3ti68h8wOM9d5LU8mTC1R84wNoc',
-        'access_key' : '796465615720640512-YXBMkfdYswssF17ln9SsxFFCdxHr69G',
-        'access_secret' : 'Pd2ZUzQER5HLTPorsXISTjUinMSXXqZvOZhsDL3VNq3f5'}
-
-        twitter = Twitter(auth = OAuth(config["access_key"], config["access_secret"], config["consumer_key"], config["consumer_secret"]))
-
-        results = twitter.trends.place(_id = 2459115)
-        # localised trends can be specified by looking up WOE IDs:
-        # http://woeid.rosselliot.co.nz/lookup/
-        # WOEID for NYC is 2459115, for the world is 1, for United States is 23424977
-        print("NYC Trends:")
-
-        for location in results:
-        	for trend in location["trends"]:
-        		print(trend["name"])
+        pass
