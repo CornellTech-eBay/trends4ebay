@@ -1,3 +1,6 @@
 [submodule "buzzfeedtrends"]
 	path = buzzfeedtrends
 	url = https://github.com/CornellTech-eBay/buzzfeedtrends.git
+[submodule "yahooWeather"]
+	path = yahooWeather
+	url = https://github.com/CornellTech-eBay/yahoo-weather.git
