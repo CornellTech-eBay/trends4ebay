@@ -15,6 +15,10 @@ import copy
 from ebaysdk.exception import ConnectionError
 from ebaysdk.finding import Connection
 
+import yahooWeather.yhweather as yhweather
+import yahooWeather.weatherParser as weatherParser
+import word_processer
+
 from pytrends.request import *
 
 from buzzfeedtrends.BFRequest import getBFTrends
@@ -163,6 +167,26 @@ def SEO(settingDict, keywordsList):
     return nkeywordsList[0: min(20, len(nkeywordsList))]
 
 
+def get_weather_keywords(location):
+    title, text, temp_today, temp_future, temp_diff = yhweather.get_weather(location)
+    print ("Today's weather: ", title)
+    print ("Condition ", text.strip().lower())
+    print ('temperature today: ', temp_today)
+    print ('temperature in a week: ', temp_future)
+    print ('temp_diff: ', temp_diff)
+    weather_keywords = ["get weather keywords unsuccessfully"]
+    all_weather_keywords = weatherParser.weather_keywords()
+    categories = ["overcast", "rainy", "snow", "sunny"]
+    all_category = weatherParser.weather_category()
+    print (all_category)
+    for i, category in enumerate(all_category):
+        print ("why", text.strip().lower(), category)
+        if text.strip().lower() in category:
+            weather_keywords = all_weather_keywords[i]
+    return weather_keywords
+
+
+
 if __name__ == "__main__":
 
     getData = True
@@ -183,9 +207,9 @@ if __name__ == "__main__":
         print(keywordsList)
 
         # get buzzfeed trends
-        BFTrendsList = getBFTrendingList('trending')
-        print("BuzzFeed Stories:")
-        print(BFTrendsList)
+        # BFTrendsList = getBFTrendingList('trending')
+        # print("BuzzFeed Stories:")
+        # print(BFTrendsList)
 
         # get twitter trends
         config = {
@@ -201,15 +225,25 @@ if __name__ == "__main__":
         # http://woeid.rosselliot.co.nz/lookup/
         # WOEID for NYC is 2459115, for the world is 1, for United States is 23424977
         print("Twitter NYC Trends:")
-
+        twitter_keywords = []
         for location in results:
-        	for trend in location["trends"]:
-        		print(trend["name"])
+            for trend in location["trends"]:
+                words = trend["name"]
+                twitter_keywords.append(words)
 
-        keywordsList = keywordsList[0:10] + BFTrendsList[0:10]
+        keywordsList = keywordsList + twitter_keywords
+
+
+        # get weather keywords
+        weather_keywords = get_weather_keywords(2459115)
+        keywordsList = word_processer.processer(keywordsList)
+        # if getting weather keywords successfully
+        if (len(weather_keywords) != 1):
+            keywordsList = weather_keywords + keywordsList
+
 
         print(len(keywordsList))
-
+        keywordsList = keywordsList[:20]
         # get settings
         settingDict = load_settings("adminsettings")
         print("Settings")
