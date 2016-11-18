@@ -54,10 +54,8 @@ def getItemList(ebayAPI, keywordsList, maxN):
 
     for keyword in keywordsList:
 
-        print(keyword)
-
         itemDictList[keyword] = []
-        response = ebayAPI.execute('findItemsAdvanced', {'keywords': keyword})
+        response = ebayAPI.execute('findItemsAdvanced', {'keywords': keyword, 'outputSelector': "SellerInfo"})
         if not hasattr(response.reply.searchResult, 'item'):
             continue
         assert(response.reply.ack == 'Success')
@@ -69,8 +67,23 @@ def getItemList(ebayAPI, keywordsList, maxN):
         item = response.reply.searchResult.item
 
         for i in range(min(maxN, len(item))):
+            # print ("item title: ", item[i].title)
+            # print ("seller info: ", item[i].sellerInfo.topRatedSeller)
+            # print ("seller feedbackScore: ", item[i].sellerInfo.feedbackScore)
+            isTopRatedSeller = item[i].sellerInfo.topRatedSeller
+            score = float(item[i].sellerInfo.feedbackScore)
             itemDictList[keyword].append(item[i])
-
+            # if (score >= 10000):
+            #     print ("saved")
+            #     itemDictList[keyword].append(item[i])
+            # else:
+            #     if (len(item) > 1):
+            #         if (float(item[i + 1].sellerInfo.feedbackScore) >= 10000):
+            #             print ("item title: ", item[i + 1].title)
+            #             print ("seller info: ", item[i + 1].sellerInfo.topRatedSeller)
+            #             print ("saved second chance")
+            #             itemDictList[keyword].append(item[i + 1])
+            # print ("itemDictList value: ", itemDictList[keyword][0].sellerInfo)
     return itemDictList
 
 
@@ -173,17 +186,26 @@ def get_weather_keywords(location):
     print ("Condition ", text.strip().lower())
     print ('temperature today: ', temp_today)
     print ('temperature in a week: ', temp_future)
+    temp_diff = float(temp_diff)
     print ('temp_diff: ', temp_diff)
     weather_keywords = ["get weather keywords unsuccessfully"]
+    temperature_keywords = ["no indicator of changing season currently"]
     all_weather_keywords = weatherParser.weather_keywords()
+    all_temperature_keywords = weatherParser.temperature_keywords()
     categories = ["overcast", "rainy", "snow", "sunny"]
     all_category = weatherParser.weather_category()
-    print (all_category)
+    # print (all_category)
+    # Getting weather keywords for temperature change
+    if temp_diff < -10:
+        temperature_keywords = all_temperature_keywords[0]
+    if temp_diff > 10:
+        temperature_keywords = all_temperature_keywords[1]
+
+    # Getting weather keywords for weather condition
     for i, category in enumerate(all_category):
-        print ("why", text.strip().lower(), category)
         if text.strip().lower() in category:
             weather_keywords = all_weather_keywords[i]
-    return weather_keywords
+    return weather_keywords, temperature_keywords
 
 
 
@@ -202,9 +224,10 @@ if __name__ == "__main__":
         hottrendsdetail = xmltodict.parse(pytrends.hottrendsdetail({}))
 
         # parse the searches into keywords
-        keywordsList = parseHottrends(hottrendsdetail)
-        print("Keywords List:")
-        print(keywordsList)
+        # googleKeywords = parseHottrends(hottrendsdetail)
+        googleKeywords = ["thanksgiving decorations", "harry potter", "2016-17 nfl season", "cleveland cavaliers", "fallout 4", "leonardo dicaprio", "Donald Trump", "Metallica", "Houston Astros", "Kris Bryant‬", "Amazon.com"]
+        print("Google Keywords List:")
+        print(googleKeywords)
 
         # get buzzfeed trends
         # BFTrendsList = getBFTrendingList('trending')
@@ -226,30 +249,47 @@ if __name__ == "__main__":
         # WOEID for NYC is 2459115, for the world is 1, for United States is 23424977
         print("Twitter NYC Trends:")
         twitter_keywords = []
-        for location in results:
-            for trend in location["trends"]:
-                words = trend["name"]
-                twitter_keywords.append(words)
+        # for location in results:
+        #     for trend in location["trends"]:
+        #         words = trend["name"].strip("#")
+        #         twitter_keywords.append(words)
+        # print (twitter_keywords)
+        # twitter_keywords = ["Paris Hilton", "super moon", "Mitt Romney", "Knicks"]
+        keywordsList = googleKeywords
 
-        keywordsList = keywordsList + twitter_keywords
+        #  Merging different sources of keywords
+        # for i in range(max(len(twitter_keywords), len(googleKeywords))):
+        #     if i < len(googleKeywords):
+        #         keywordsList.append(googleKeywords[i])
+        #     if i < len(googleKeywords):
+        #         keywordsList.append(twitter_keywords[i])
+        # print ("merged raw keyword list: ", keywordsList)
 
-
-        # get weather keywords
-        weather_keywords = get_weather_keywords(2459115)
-        keywordsList = word_processer.processer(keywordsList)
+        # topKeywordsList = word_processer.processer(keywordsList)
+        #  To turn off printing: processer(keywords_list, printed=True)
+        # print ("top words: ", topKeywordsList)
+        # keywordsList = topKeywordsList + keywordsList
         # if getting weather keywords successfully
-        if (len(weather_keywords) != 1):
-            keywordsList = weather_keywords + keywordsList
-
-
-        print(len(keywordsList))
-        keywordsList = keywordsList[:20]
+        # get weather keywords
+        # weather_keywords, temperature_keywords = get_weather_keywords(2459115)
+        # if (len(temperature_keywords) != 1):
+        #     keywordsList = temperature_keywords + keywordsList
+        #     if (len(weather_keywords) != 1):
+        #         keywordsList = weather_keywords[:2] + keywordsList
+        # else:
+        # #  if no temperature_keywords is available
+        #     if (len(weather_keywords) != 1):
+        #         keywordsList = keywordsList + weather_keywords
+        # print ("after weather merge: ", keywordsList)
+        # keywordsList = ["New York Giants", "New York Jets"] + keywordsList
+        # print(len(keywordsList))
+        # keywordsList = keywordsList[:40]
         # get settings
         settingDict = load_settings("adminsettings")
         print("Settings")
         print(settingDict)
 
-        keywordsList = SEO(settingDict, keywordsList)
+        # keywordsList = SEO(settingDict, keywordsList)
         print("Keywords List")
         print(keywordsList)
 
@@ -261,7 +301,7 @@ if __name__ == "__main__":
             print(e.response.dict())
 
         # get the item lists from ebay
-        itemDictList = getItemList(ebayAPI, keywordsList, 5)
+        itemDictList = getItemList(ebayAPI, keywordsList, 1)
 
         save_obj(itemDictList, 'rawData')
         # dumpHuman(itemDictList)
